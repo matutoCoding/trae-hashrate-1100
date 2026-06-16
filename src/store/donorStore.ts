@@ -73,9 +73,7 @@ export const useDonorStore = create<DonorStore>((set, get) => ({
             const benefitStore = useBenefitStore.getState();
             const benefit = benefitStore.getBenefitByDonorId(donorId);
             if (benefit) {
-              benefitStore.donorBenefits = benefitStore.donorBenefits.map(b =>
-                b.donorId === donorId ? { ...b, totalVolume: newTotalVolume } : b
-              );
+              benefitStore.updateBenefitTotalVolume(donorId, newTotalVolume);
             }
           }
 

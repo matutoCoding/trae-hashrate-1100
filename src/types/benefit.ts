@@ -36,6 +36,7 @@ export interface LevelChangeRecord {
     physicalExam: number;
     priorityBlood: number;
     medicalSubsidy: number;
+    otherBenefits: number;
     clearedAmount: number;
     supplementedAmount: number;
   };

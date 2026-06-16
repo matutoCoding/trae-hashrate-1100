@@ -131,6 +131,10 @@ const BenefitsPage: React.FC = () => {
                       <Text className={styles.carryOverLabel}>医疗补贴结转</Text>
                       <Text className={styles.carryOverValue}>{formatMoney(record.carryOverDetail.medicalSubsidy)}</Text>
                     </View>
+                    <View className={styles.carryOverRow}>
+                      <Text className={styles.carryOverLabel}>其他权益结转</Text>
+                      <Text className={styles.carryOverValue}>{record.carryOverDetail.otherBenefits}项</Text>
+                    </View>
                     {record.carryOverDetail.clearedAmount > 0 && (
                       <View className={styles.carryOverRow}>
                         <Text className={styles.carryOverLabel} style={{ color: '#F53F3F' }}>清零金额</Text>

@@ -112,6 +112,7 @@ export const levelChangeRecords: LevelChangeRecord[] = [
       physicalExam: 1,
       priorityBlood: 1,
       medicalSubsidy: 200,
+      otherBenefits: 1,
       clearedAmount: 0,
       supplementedAmount: 600
     }
@@ -134,6 +135,7 @@ export const levelChangeRecords: LevelChangeRecord[] = [
       physicalExam: 1,
       priorityBlood: 0,
       medicalSubsidy: 300,
+      otherBenefits: 1,
       clearedAmount: 0,
       supplementedAmount: 1000
     }
@@ -156,6 +158,7 @@ export const levelChangeRecords: LevelChangeRecord[] = [
       physicalExam: 2,
       priorityBlood: 2,
       medicalSubsidy: 500,
+      otherBenefits: 2,
       clearedAmount: 800,
       supplementedAmount: 0
     }

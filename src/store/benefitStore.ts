@@ -97,6 +97,7 @@ export const useBenefitStore = create<BenefitStore>((set, get) => ({
       physicalExam: remainingQuota.physicalExam,
       priorityBlood: remainingQuota.priorityBlood,
       medicalSubsidy: remainingQuota.medicalSubsidy,
+      otherBenefits: remainingQuota.otherBenefits,
       clearedAmount,
       supplementedAmount
     };
@@ -117,6 +118,14 @@ export const useBenefitStore = create<BenefitStore>((set, get) => ({
       ]
     }));
     console.log('[BenefitStore] 等级变更记录已添加', { donorName: record.donorName, changeType: record.changeType });
+  },
+
+  updateBenefitTotalVolume: (donorId, totalVolume) => {
+    set(state => ({
+      donorBenefits: state.donorBenefits.map(b =>
+        b.donorId === donorId ? { ...b, totalVolume } : b
+      )
+    }));
   },
 
   upsertDonorBenefit: (donorId, donorName, level, remainingQuota) => {

@@ -26,8 +26,10 @@ const LevelChangePage: React.FC = () => {
     const donorId = router.params.donorId;
     if (donorId) {
       setSelectedDonorId(donorId);
+    } else if (donorList.length > 0) {
+      setSelectedDonorId(donorList[0].id);
     }
-  }, [router.params.donorId]);
+  }, [router.params.donorId, donorList]);
 
   const selectedDonor = useMemo(() => {
     return selectedDonorId ? donorList.find(d => d.id === selectedDonorId) : undefined;
@@ -113,8 +115,8 @@ const LevelChangePage: React.FC = () => {
             <Text className={styles.formLabel}>献血者</Text>
             <Picker
               mode="selector"
-              range={donors.map(d => `${d.name} (${d.levelName} - ${formatVolume(d.totalVolume)})`)}
-              value={donors.findIndex(d => d.id === selectedDonorId)}
+              range={donorList.map(d => `${d.name} (${d.levelName} - ${formatVolume(d.totalVolume)})`)}
+              value={Math.max(0, donorList.findIndex(d => d.id === selectedDonorId))}
               onChange={handleDonorSelect}
             >
               <View className={styles.formInput}>
@@ -163,7 +165,7 @@ const LevelChangePage: React.FC = () => {
               <Picker
                 mode="selector"
                 range={honorLevels.map(l => l.name)}
-                value={honorLevels.findIndex(l => l.id === fromLevelId)}
+                value={Math.max(0, honorLevels.findIndex(l => l.id === fromLevelId))}
                 onChange={handleFromLevelSelect}
               >
                 <View className={styles.formInput}>
@@ -176,7 +178,7 @@ const LevelChangePage: React.FC = () => {
               <Picker
                 mode="selector"
                 range={honorLevels.map(l => l.name)}
-                value={honorLevels.findIndex(l => l.id === toLevelId)}
+                value={Math.max(0, honorLevels.findIndex(l => l.id === toLevelId))}
                 onChange={handleToLevelSelect}
               >
                 <View className={styles.formInput}>
@@ -255,6 +257,10 @@ const LevelChangePage: React.FC = () => {
               <View className={styles.carryOverRow}>
                 <Text className={styles.carryOverLabel}>结转后医疗补贴</Text>
                 <Text className={styles.carryOverValue}>{formatMoney(carryOverResult.remainingQuota.medicalSubsidy)}</Text>
+              </View>
+              <View className={styles.carryOverRow}>
+                <Text className={styles.carryOverLabel}>结转后其他权益</Text>
+                <Text className={styles.carryOverValue}>{carryOverResult.remainingQuota.otherBenefits}项</Text>
               </View>
               {carryOverResult.clearedAmount > 0 && (
                 <View className={styles.carryOverRow}>
