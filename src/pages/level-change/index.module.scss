@@ -1,0 +1,232 @@
+@use '@/styles/variables.scss' as *;
+
+.page {
+  padding: 0 $page-padding $spacing-xl;
+  min-height: 100vh;
+}
+
+.section {
+  margin: $spacing-lg 0;
+}
+
+.sectionTitle {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+  display: block;
+  margin-bottom: $spacing-md;
+}
+
+.card {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+  margin-bottom: $spacing-md;
+}
+
+.formItem {
+  margin-bottom: $spacing-lg;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.formLabel {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  display: block;
+  margin-bottom: $spacing-sm;
+  font-weight: $font-weight-medium;
+}
+
+.formInput {
+  height: 80rpx;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  padding: 0 $spacing-md;
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  display: flex;
+  align-items: center;
+  border: 1rpx solid $color-border;
+}
+
+.pickerText {
+  font-size: $font-size-md;
+  color: $color-text-primary;
+}
+
+.pickerPlaceholder {
+  font-size: $font-size-md;
+  color: $color-text-tertiary;
+}
+
+.changeTypeOptions {
+  display: flex;
+  gap: $spacing-md;
+}
+
+.changeTypeOption {
+  flex: 1;
+  height: 88rpx;
+  border-radius: $radius-md;
+  background: $color-bg-page;
+  border: 2rpx solid $color-border;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-secondary;
+  transition: all $transition-base;
+
+  &.activeUpgrade {
+    background: rgba(0, 180, 42, 0.1);
+    border-color: $color-success;
+    color: $color-success;
+  }
+
+  &.activeDowngrade {
+    background: rgba(245, 63, 63, 0.1);
+    border-color: $color-error;
+    color: $color-error;
+  }
+}
+
+.levelCompare {
+  display: flex;
+  align-items: center;
+  padding: $spacing-lg;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  margin-bottom: $spacing-md;
+}
+
+.levelSide {
+  flex: 1;
+  text-align: center;
+}
+
+.levelName {
+  font-size: $font-size-lg;
+  font-weight: $font-weight-bold;
+  display: block;
+  margin-bottom: $spacing-xs;
+}
+
+.levelSub {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+}
+
+.arrow {
+  font-size: 36rpx;
+  padding: 0 $spacing-lg;
+  color: $color-text-tertiary;
+}
+
+.carryOverBox {
+  background: linear-gradient(135deg, rgba(33, 150, 243, 0.08) 0%, rgba(33, 150, 243, 0.15) 100%);
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  border: 1rpx solid rgba(33, 150, 243, 0.2);
+}
+
+.carryOverTitle {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-info;
+  display: block;
+  margin-bottom: $spacing-md;
+}
+
+.carryOverRow {
+  display: flex;
+  justify-content: space-between;
+  padding: $spacing-sm 0;
+  border-bottom: 1rpx solid rgba(33, 150, 243, 0.1);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.carryOverLabel {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.carryOverValue {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+}
+
+.cleared {
+  color: $color-error;
+}
+
+.supplemented {
+  color: $color-success;
+}
+
+.quotaCompare {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: $spacing-sm;
+  align-items: center;
+  margin-bottom: $spacing-md;
+}
+
+.quotaItem {
+  padding: $spacing-md;
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  text-align: center;
+}
+
+.quotaItemTitle {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  display: block;
+  margin-bottom: 4rpx;
+}
+
+.quotaItemValue {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+  color: $color-text-primary;
+}
+
+.quotaArrow {
+  font-size: $font-size-lg;
+  color: $color-text-tertiary;
+  text-align: center;
+}
+
+.textarea {
+  background: $color-bg-page;
+  border-radius: $radius-md;
+  padding: $spacing-md;
+  font-size: $font-size-md;
+  color: $color-text-primary;
+  border: 1rpx solid $color-border;
+  min-height: 160rpx;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.submitBtn {
+  @include button-reset;
+  background: $gradient-primary;
+  color: $color-text-white;
+  height: $button-height-lg;
+  border-radius: $radius-button;
+  font-size: $font-size-lg;
+  font-weight: $font-weight-semibold;
+  width: 100%;
+  margin-top: $spacing-lg;
+  box-shadow: $shadow-float;
+}

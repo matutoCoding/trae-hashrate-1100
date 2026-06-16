@@ -1,0 +1,81 @@
+@use '@/styles/variables.scss' as *;
+
+.card {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  border: 2rpx solid transparent;
+  overflow: hidden;
+  box-shadow: $shadow-card;
+  transition: all $transition-base;
+
+  &:active {
+    transform: scale(0.98);
+  }
+
+  &.selected {
+    border-width: 3rpx;
+    box-shadow: $shadow-card-hover;
+  }
+}
+
+.header {
+  padding: $spacing-md $spacing-lg;
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+}
+
+.levelBadge {
+  padding: 4rpx 16rpx;
+  border-radius: $radius-xs;
+}
+
+.rankText {
+  font-size: $font-size-xs;
+  font-weight: $font-weight-bold;
+  color: $color-text-white;
+}
+
+.levelName {
+  font-size: $font-size-md;
+  font-weight: $font-weight-semibold;
+}
+
+.volumeRange {
+  padding: $spacing-sm $spacing-lg;
+  border-bottom: 1rpx solid $color-divider;
+}
+
+.volumeText {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.benefitList {
+  padding: $spacing-md $spacing-lg;
+}
+
+.benefitItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: $spacing-xs 0;
+}
+
+.benefitLabel {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+}
+
+.benefitValue {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-text-primary;
+}
+
+.description {
+  font-size: $font-size-xs;
+  color: $color-text-tertiary;
+  padding: 0 $spacing-lg $spacing-lg;
+  display: block;
+}

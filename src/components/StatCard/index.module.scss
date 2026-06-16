@@ -1,0 +1,65 @@
+@use '@/styles/variables.scss' as *;
+
+.card {
+  background: $color-bg-card;
+  border-radius: $radius-lg;
+  padding: $spacing-lg;
+  box-shadow: $shadow-card;
+  min-width: 0;
+  flex: 1;
+}
+
+.title {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  display: block;
+  margin-bottom: $spacing-sm;
+}
+
+.valueRow {
+  display: flex;
+  align-items: baseline;
+}
+
+.value {
+  font-size: $font-size-xxl;
+  font-weight: $font-weight-bold;
+  color: $color-text-primary;
+  line-height: 1.2;
+}
+
+.unit {
+  font-size: $font-size-sm;
+  color: $color-text-secondary;
+  margin-left: $spacing-xs;
+}
+
+.trend {
+  font-size: $font-size-xs;
+  margin-top: $spacing-sm;
+  display: block;
+}
+
+.up {
+  color: $color-success;
+}
+
+.down {
+  color: $color-error;
+}
+
+.primary .value {
+  color: $color-primary;
+}
+
+.success .value {
+  color: $color-success;
+}
+
+.warning .value {
+  color: $color-warning;
+}
+
+.info .value {
+  color: $color-info;
+}
