@@ -18,6 +18,18 @@ export interface HonorLevel {
   description: string;
 }
 
+export interface CarryOverItemDetail {
+  remaining: number;
+  diff: number;
+}
+
+export interface CarryOverDetail {
+  physicalExam: CarryOverItemDetail;
+  priorityBlood: CarryOverItemDetail;
+  medicalSubsidy: CarryOverItemDetail;
+  otherBenefits: CarryOverItemDetail;
+}
+
 export interface LevelChangeRecord {
   id: string;
   donorId: string;
@@ -32,14 +44,7 @@ export interface LevelChangeRecord {
   reason: string;
   oldQuota: BenefitQuota;
   newQuota: BenefitQuota;
-  carryOverDetail: {
-    physicalExam: number;
-    priorityBlood: number;
-    medicalSubsidy: number;
-    otherBenefits: number;
-    clearedAmount: number;
-    supplementedAmount: number;
-  };
+  carryOverDetail: CarryOverDetail;
 }
 
 export interface DonorBenefit {

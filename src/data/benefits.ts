@@ -1,4 +1,4 @@
-import { HonorLevel, LevelChangeRecord, DonorBenefit } from '@/types/benefit';
+import { HonorLevel, LevelChangeRecord, DonorBenefit, CarryOverDetail } from '@/types/benefit';
 
 export const honorLevels: HonorLevel[] = [
   {
@@ -109,12 +109,10 @@ export const levelChangeRecords: LevelChangeRecord[] = [
     oldQuota: { physicalExam: 1, priorityBlood: 1, medicalSubsidy: 200, otherBenefits: 1 },
     newQuota: { physicalExam: 2, priorityBlood: 2, medicalSubsidy: 500, otherBenefits: 2 },
     carryOverDetail: {
-      physicalExam: 1,
-      priorityBlood: 1,
-      medicalSubsidy: 200,
-      otherBenefits: 1,
-      clearedAmount: 0,
-      supplementedAmount: 600
+      physicalExam: { remaining: 1, diff: 0 },
+      priorityBlood: { remaining: 1, diff: 0 },
+      medicalSubsidy: { remaining: 200, diff: 0 },
+      otherBenefits: { remaining: 1, diff: 0 }
     }
   },
   {
@@ -132,12 +130,10 @@ export const levelChangeRecords: LevelChangeRecord[] = [
     oldQuota: { physicalExam: 2, priorityBlood: 2, medicalSubsidy: 500, otherBenefits: 2 },
     newQuota: { physicalExam: 3, priorityBlood: 3, medicalSubsidy: 1000, otherBenefits: 3 },
     carryOverDetail: {
-      physicalExam: 1,
-      priorityBlood: 0,
-      medicalSubsidy: 300,
-      otherBenefits: 1,
-      clearedAmount: 0,
-      supplementedAmount: 1000
+      physicalExam: { remaining: 1, diff: -1 },
+      priorityBlood: { remaining: 0, diff: -2 },
+      medicalSubsidy: { remaining: 300, diff: -200 },
+      otherBenefits: { remaining: 1, diff: -1 }
     }
   },
   {
@@ -155,12 +151,10 @@ export const levelChangeRecords: LevelChangeRecord[] = [
     oldQuota: { physicalExam: 3, priorityBlood: 3, medicalSubsidy: 1000, otherBenefits: 3 },
     newQuota: { physicalExam: 2, priorityBlood: 2, medicalSubsidy: 500, otherBenefits: 2 },
     carryOverDetail: {
-      physicalExam: 2,
-      priorityBlood: 2,
-      medicalSubsidy: 500,
-      otherBenefits: 2,
-      clearedAmount: 800,
-      supplementedAmount: 0
+      physicalExam: { remaining: 2, diff: -1 },
+      priorityBlood: { remaining: 2, diff: -1 },
+      medicalSubsidy: { remaining: 500, diff: -500 },
+      otherBenefits: { remaining: 2, diff: -1 }
     }
   }
 ];

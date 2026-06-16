@@ -120,37 +120,53 @@ const BenefitsPage: React.FC = () => {
                   <View className={styles.carryOverBox}>
                     <Text className={styles.carryOverTitle}>额度结转明细</Text>
                     <View className={styles.carryOverRow}>
-                      <Text className={styles.carryOverLabel}>免费体检结转</Text>
-                      <Text className={styles.carryOverValue}>{record.carryOverDetail.physicalExam}次</Text>
+                      <Text className={styles.carryOverLabel}>免费体检</Text>
+                      <Text className={styles.carryOverValue}>
+                        剩余{record.carryOverDetail.physicalExam.remaining}次
+                        {record.carryOverDetail.physicalExam.diff > 0 && (
+                          <Text style={{ color: '#00B42A' }}> (+补{record.carryOverDetail.physicalExam.diff}次)</Text>
+                        )}
+                        {record.carryOverDetail.physicalExam.diff < 0 && (
+                          <Text style={{ color: '#F53F3F' }}> (-清{Math.abs(record.carryOverDetail.physicalExam.diff)}次)</Text>
+                        )}
+                      </Text>
                     </View>
                     <View className={styles.carryOverRow}>
-                      <Text className={styles.carryOverLabel}>优先用血结转</Text>
-                      <Text className={styles.carryOverValue}>{record.carryOverDetail.priorityBlood}次</Text>
+                      <Text className={styles.carryOverLabel}>优先用血</Text>
+                      <Text className={styles.carryOverValue}>
+                        剩余{record.carryOverDetail.priorityBlood.remaining}次
+                        {record.carryOverDetail.priorityBlood.diff > 0 && (
+                          <Text style={{ color: '#00B42A' }}> (+补{record.carryOverDetail.priorityBlood.diff}次)</Text>
+                        )}
+                        {record.carryOverDetail.priorityBlood.diff < 0 && (
+                          <Text style={{ color: '#F53F3F' }}> (-清{Math.abs(record.carryOverDetail.priorityBlood.diff)}次)</Text>
+                        )}
+                      </Text>
                     </View>
                     <View className={styles.carryOverRow}>
-                      <Text className={styles.carryOverLabel}>医疗补贴结转</Text>
-                      <Text className={styles.carryOverValue}>{formatMoney(record.carryOverDetail.medicalSubsidy)}</Text>
+                      <Text className={styles.carryOverLabel}>医疗补贴</Text>
+                      <Text className={styles.carryOverValue}>
+                        剩余{formatMoney(record.carryOverDetail.medicalSubsidy.remaining)}
+                        {record.carryOverDetail.medicalSubsidy.diff > 0 && (
+                          <Text style={{ color: '#00B42A' }}> (+补{formatMoney(record.carryOverDetail.medicalSubsidy.diff)})</Text>
+                        )}
+                        {record.carryOverDetail.medicalSubsidy.diff < 0 && (
+                          <Text style={{ color: '#F53F3F' }}> (-清{formatMoney(Math.abs(record.carryOverDetail.medicalSubsidy.diff))})</Text>
+                        )}
+                      </Text>
                     </View>
                     <View className={styles.carryOverRow}>
-                      <Text className={styles.carryOverLabel}>其他权益结转</Text>
-                      <Text className={styles.carryOverValue}>{record.carryOverDetail.otherBenefits}项</Text>
+                      <Text className={styles.carryOverLabel}>其他权益</Text>
+                      <Text className={styles.carryOverValue}>
+                        剩余{record.carryOverDetail.otherBenefits.remaining}项
+                        {record.carryOverDetail.otherBenefits.diff > 0 && (
+                          <Text style={{ color: '#00B42A' }}> (+补{record.carryOverDetail.otherBenefits.diff}项)</Text>
+                        )}
+                        {record.carryOverDetail.otherBenefits.diff < 0 && (
+                          <Text style={{ color: '#F53F3F' }}> (-清{Math.abs(record.carryOverDetail.otherBenefits.diff)}项)</Text>
+                        )}
+                      </Text>
                     </View>
-                    {record.carryOverDetail.clearedAmount > 0 && (
-                      <View className={styles.carryOverRow}>
-                        <Text className={styles.carryOverLabel} style={{ color: '#F53F3F' }}>清零金额</Text>
-                        <Text className={styles.carryOverValue} style={{ color: '#F53F3F' }}>
-                          -{formatMoney(record.carryOverDetail.clearedAmount)}
-                        </Text>
-                      </View>
-                    )}
-                    {record.carryOverDetail.supplementedAmount > 0 && (
-                      <View className={styles.carryOverRow}>
-                        <Text className={styles.carryOverLabel} style={{ color: '#00B42A' }}>补足金额</Text>
-                        <Text className={styles.carryOverValue} style={{ color: '#00B42A' }}>
-                          +{formatMoney(record.carryOverDetail.supplementedAmount)}
-                        </Text>
-                      </View>
-                    )}
                   </View>
                 </View>
               ))

@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { HonorLevel, LevelChangeRecord, DonorBenefit, BenefitQuota, ChangeType } from '@/types/benefit';
+import { HonorLevel, LevelChangeRecord, DonorBenefit, BenefitQuota, ChangeType, CarryOverDetail } from '@/types/benefit';
 import { honorLevels as mockLevels, levelChangeRecords as mockRecords, donorBenefits as mockBenefits } from '@/data/benefits';
 import { useDonorStore } from '@/store/donorStore';
 import dayjs from 'dayjs';
@@ -18,17 +18,10 @@ interface BenefitStore {
     changeType: ChangeType
   ) => {
     remainingQuota: BenefitQuota;
-    clearedAmount: number;
-    supplementedAmount: number;
-    carryOverDetail: {
-      physicalExam: number;
-      priorityBlood: number;
-      medicalSubsidy: number;
-      clearedAmount: number;
-      supplementedAmount: number;
-    };
+    carryOverDetail: CarryOverDetail;
   };
   addLevelChangeRecord: (record: Omit<LevelChangeRecord, 'id'>) => void;
+  updateBenefitTotalVolume: (donorId: string, totalVolume: number) => void;
   upsertDonorBenefit: (donorId: string, donorName: string, level: HonorLevel, remainingQuota: BenefitQuota) => void;
   processLevelChange: (
     donorId: string,
@@ -56,8 +49,6 @@ export const useBenefitStore = create<BenefitStore>((set, get) => ({
 
   calculateCarryOver: (fromLevel, toLevel, currentRemaining, changeType) => {
     let remainingQuota: BenefitQuota;
-    let clearedAmount = 0;
-    let supplementedAmount = 0;
 
     if (changeType === 'upgrade') {
       const ratio = (fromLevel.quota.physicalExam > 0)
@@ -70,12 +61,6 @@ export const useBenefitStore = create<BenefitStore>((set, get) => ({
         medicalSubsidy: Math.max(currentRemaining.medicalSubsidy, Math.floor(toLevel.quota.medicalSubsidy * Math.min(ratio, 1))),
         otherBenefits: Math.max(currentRemaining.otherBenefits, Math.floor(toLevel.quota.otherBenefits * Math.min(ratio, 1)))
       };
-      
-      supplementedAmount = 
-        (remainingQuota.physicalExam - currentRemaining.physicalExam) * 200 +
-        (remainingQuota.priorityBlood - currentRemaining.priorityBlood) * 300 +
-        (remainingQuota.medicalSubsidy - currentRemaining.medicalSubsidy) +
-        (remainingQuota.otherBenefits - currentRemaining.otherBenefits) * 100;
     } else if (changeType === 'downgrade') {
       remainingQuota = {
         physicalExam: Math.max(0, Math.min(currentRemaining.physicalExam, toLevel.quota.physicalExam)),
@@ -83,29 +68,31 @@ export const useBenefitStore = create<BenefitStore>((set, get) => ({
         medicalSubsidy: Math.max(0, Math.min(currentRemaining.medicalSubsidy, toLevel.quota.medicalSubsidy)),
         otherBenefits: Math.max(0, Math.min(currentRemaining.otherBenefits, toLevel.quota.otherBenefits))
       };
-      
-      clearedAmount = 
-        (currentRemaining.physicalExam - remainingQuota.physicalExam) * 200 +
-        (currentRemaining.priorityBlood - remainingQuota.priorityBlood) * 300 +
-        (currentRemaining.medicalSubsidy - remainingQuota.medicalSubsidy) +
-        (currentRemaining.otherBenefits - remainingQuota.otherBenefits) * 100;
     } else {
       remainingQuota = toLevel.quota;
     }
 
-    const carryOverDetail = {
-      physicalExam: remainingQuota.physicalExam,
-      priorityBlood: remainingQuota.priorityBlood,
-      medicalSubsidy: remainingQuota.medicalSubsidy,
-      otherBenefits: remainingQuota.otherBenefits,
-      clearedAmount,
-      supplementedAmount
+    const carryOverDetail: CarryOverDetail = {
+      physicalExam: {
+        remaining: remainingQuota.physicalExam,
+        diff: remainingQuota.physicalExam - currentRemaining.physicalExam
+      },
+      priorityBlood: {
+        remaining: remainingQuota.priorityBlood,
+        diff: remainingQuota.priorityBlood - currentRemaining.priorityBlood
+      },
+      medicalSubsidy: {
+        remaining: remainingQuota.medicalSubsidy,
+        diff: remainingQuota.medicalSubsidy - currentRemaining.medicalSubsidy
+      },
+      otherBenefits: {
+        remaining: remainingQuota.otherBenefits,
+        diff: remainingQuota.otherBenefits - currentRemaining.otherBenefits
+      }
     };
 
     return {
       remainingQuota,
-      clearedAmount,
-      supplementedAmount,
       carryOverDetail
     };
   },
@@ -212,8 +199,7 @@ export const useBenefitStore = create<BenefitStore>((set, get) => ({
       from: fromLevel.name,
       to: toLevel.name,
       changeType,
-      clearedAmount: carryOverResult.clearedAmount,
-      supplementedAmount: carryOverResult.supplementedAmount
+      carryOverDetail: carryOverResult.carryOverDetail
     });
   }
 }));

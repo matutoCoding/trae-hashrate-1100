@@ -247,37 +247,53 @@ const LevelChangePage: React.FC = () => {
             <View className={styles.carryOverBox}>
               <Text className={styles.carryOverTitle}>结转计算结果</Text>
               <View className={styles.carryOverRow}>
-                <Text className={styles.carryOverLabel}>结转后体检次数</Text>
-                <Text className={styles.carryOverValue}>{carryOverResult.remainingQuota.physicalExam}次</Text>
+                <Text className={styles.carryOverLabel}>免费体检</Text>
+                <Text className={styles.carryOverValue}>
+                  剩余{carryOverResult.carryOverDetail.physicalExam.remaining}次
+                  {carryOverResult.carryOverDetail.physicalExam.diff > 0 && (
+                    <Text style={{ color: '#00B42A' }}> (+补{carryOverResult.carryOverDetail.physicalExam.diff}次)</Text>
+                  )}
+                  {carryOverResult.carryOverDetail.physicalExam.diff < 0 && (
+                    <Text style={{ color: '#F53F3F' }}> (-清{Math.abs(carryOverResult.carryOverDetail.physicalExam.diff)}次)</Text>
+                  )}
+                </Text>
               </View>
               <View className={styles.carryOverRow}>
-                <Text className={styles.carryOverLabel}>结转后优先用血</Text>
-                <Text className={styles.carryOverValue}>{carryOverResult.remainingQuota.priorityBlood}次</Text>
+                <Text className={styles.carryOverLabel}>优先用血</Text>
+                <Text className={styles.carryOverValue}>
+                  剩余{carryOverResult.carryOverDetail.priorityBlood.remaining}次
+                  {carryOverResult.carryOverDetail.priorityBlood.diff > 0 && (
+                    <Text style={{ color: '#00B42A' }}> (+补{carryOverResult.carryOverDetail.priorityBlood.diff}次)</Text>
+                  )}
+                  {carryOverResult.carryOverDetail.priorityBlood.diff < 0 && (
+                    <Text style={{ color: '#F53F3F' }}> (-清{Math.abs(carryOverResult.carryOverDetail.priorityBlood.diff)}次)</Text>
+                  )}
+                </Text>
               </View>
               <View className={styles.carryOverRow}>
-                <Text className={styles.carryOverLabel}>结转后医疗补贴</Text>
-                <Text className={styles.carryOverValue}>{formatMoney(carryOverResult.remainingQuota.medicalSubsidy)}</Text>
+                <Text className={styles.carryOverLabel}>医疗补贴</Text>
+                <Text className={styles.carryOverValue}>
+                  剩余{formatMoney(carryOverResult.carryOverDetail.medicalSubsidy.remaining)}
+                  {carryOverResult.carryOverDetail.medicalSubsidy.diff > 0 && (
+                    <Text style={{ color: '#00B42A' }}> (+补{formatMoney(carryOverResult.carryOverDetail.medicalSubsidy.diff)})</Text>
+                  )}
+                  {carryOverResult.carryOverDetail.medicalSubsidy.diff < 0 && (
+                    <Text style={{ color: '#F53F3F' }}> (-清{formatMoney(Math.abs(carryOverResult.carryOverDetail.medicalSubsidy.diff))})</Text>
+                  )}
+                </Text>
               </View>
               <View className={styles.carryOverRow}>
-                <Text className={styles.carryOverLabel}>结转后其他权益</Text>
-                <Text className={styles.carryOverValue}>{carryOverResult.remainingQuota.otherBenefits}项</Text>
+                <Text className={styles.carryOverLabel}>其他权益</Text>
+                <Text className={styles.carryOverValue}>
+                  剩余{carryOverResult.carryOverDetail.otherBenefits.remaining}项
+                  {carryOverResult.carryOverDetail.otherBenefits.diff > 0 && (
+                    <Text style={{ color: '#00B42A' }}> (+补{carryOverResult.carryOverDetail.otherBenefits.diff}项)</Text>
+                  )}
+                  {carryOverResult.carryOverDetail.otherBenefits.diff < 0 && (
+                    <Text style={{ color: '#F53F3F' }}> (-清{Math.abs(carryOverResult.carryOverDetail.otherBenefits.diff)}项)</Text>
+                  )}
+                </Text>
               </View>
-              {carryOverResult.clearedAmount > 0 && (
-                <View className={styles.carryOverRow}>
-                  <Text className={classnames(styles.carryOverLabel, styles.cleared)}>降级清零金额</Text>
-                  <Text className={classnames(styles.carryOverValue, styles.cleared)}>
-                    -{formatMoney(carryOverResult.clearedAmount)}
-                  </Text>
-                </View>
-              )}
-              {carryOverResult.supplementedAmount > 0 && (
-                <View className={styles.carryOverRow}>
-                  <Text className={classnames(styles.carryOverLabel, styles.supplemented)}>升级补足金额</Text>
-                  <Text className={classnames(styles.carryOverValue, styles.supplemented)}>
-                    +{formatMoney(carryOverResult.supplementedAmount)}
-                  </Text>
-                </View>
-              )}
             </View>
           )}
         </View>
