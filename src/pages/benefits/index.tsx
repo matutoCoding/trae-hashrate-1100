@@ -9,8 +9,11 @@ import { useDonorStore } from '@/store/donorStore';
 import { formatDate, formatMoney, formatVolume } from '@/utils/formatter';
 
 const BenefitsPage: React.FC = () => {
-  const { honorLevels, levelChangeRecords, getAllDonorBenefits } = useBenefitStore();
-  const { donors } = useDonorStore();
+  const honorLevels = useBenefitStore(state => state.honorLevels);
+  const levelChangeRecords = useBenefitStore(state => state.levelChangeRecords);
+  const donorBenefits = useBenefitStore(state => state.donorBenefits);
+  const donorList = useDonorStore(state => state.donors);
+  
   const [activeTab, setActiveTab] = useState<'levels' | 'records' | 'my'>('levels');
   const [selectedDonorIndex, setSelectedDonorIndex] = useState(0);
 
@@ -18,7 +21,17 @@ const BenefitsPage: React.FC = () => {
     Taro.navigateTo({ url: '/pages/level-change/index' });
   };
 
-  const allDonorBenefits = useMemo(() => getAllDonorBenefits(), [getAllDonorBenefits]);
+  const allDonorBenefits = useMemo(() => {
+    return donorBenefits.map(benefit => {
+      const donor = donorList.find(d => d.id === benefit.donorId);
+      return {
+        ...benefit,
+        totalVolume: donor?.totalVolume || benefit.totalVolume,
+        totalDonations: donor?.totalDonations || 0
+      };
+    }).sort((a, b) => b.totalVolume - a.totalVolume);
+  }, [donorBenefits, donorList]);
+
   const selectedBenefit = useMemo(() => allDonorBenefits[selectedDonorIndex], [allDonorBenefits, selectedDonorIndex]);
   const donorPickerOptions = useMemo(() => 
     allDonorBenefits.map(b => `${b.donorName} - ${b.levelName}`), 

@@ -11,8 +11,9 @@ import dayjs from 'dayjs';
 
 const LevelChangePage: React.FC = () => {
   const router = useRouter();
-  const { donors, getDonorById } = useDonorStore();
-  const { honorLevels, getBenefitByDonorId, calculateCarryOver, addLevelChangeRecord, updateDonorBenefit } = useBenefitStore();
+  const donorList = useDonorStore(state => state.donors);
+  const { honorLevels, getBenefitByDonorId, calculateCarryOver, processLevelChange } = useBenefitStore();
+  const donorBenefits = useBenefitStore(state => state.donorBenefits);
 
   const [selectedDonorId, setSelectedDonorId] = useState<string>('');
   const [changeType, setChangeType] = useState<ChangeType>('upgrade');
@@ -29,12 +30,12 @@ const LevelChangePage: React.FC = () => {
   }, [router.params.donorId]);
 
   const selectedDonor = useMemo(() => {
-    return selectedDonorId ? getDonorById(selectedDonorId) : undefined;
-  }, [selectedDonorId, getDonorById]);
+    return selectedDonorId ? donorList.find(d => d.id === selectedDonorId) : undefined;
+  }, [selectedDonorId, donorList]);
 
   const donorBenefit = useMemo(() => {
-    return selectedDonorId ? getBenefitByDonorId(selectedDonorId) : undefined;
-  }, [selectedDonorId, getBenefitByDonorId]);
+    return selectedDonorId ? donorBenefits.find(b => b.donorId === selectedDonorId) : undefined;
+  }, [selectedDonorId, donorBenefits]);
 
   useEffect(() => {
     if (selectedDonor && !fromLevelId) {
@@ -46,16 +47,18 @@ const LevelChangePage: React.FC = () => {
   const toLevel = useMemo(() => honorLevels.find(l => l.id === toLevelId), [toLevelId, honorLevels]);
 
   const carryOverResult = useMemo(() => {
-    if (!fromLevel || !toLevel || !donorBenefit) return null;
-    return calculateCarryOver(fromLevel, toLevel, donorBenefit.remainingQuota, changeType);
+    if (!fromLevel || !toLevel) return null;
+    const currentRemaining = donorBenefit?.remainingQuota || fromLevel.quota;
+    return calculateCarryOver(fromLevel, toLevel, currentRemaining, changeType);
   }, [fromLevel, toLevel, donorBenefit, changeType, calculateCarryOver]);
 
   const handleDonorSelect = (e: any) => {
     const idx = e.detail.value;
-    const donor = donors[idx];
+    const donor = donorList[idx];
     if (donor) {
       setSelectedDonorId(donor.id);
       setFromLevelId(donor.levelId);
+      setToLevelId('');
     }
   };
 
@@ -73,27 +76,20 @@ const LevelChangePage: React.FC = () => {
       return;
     }
 
-    addLevelChangeRecord({
-      donorId: selectedDonor.id,
-      donorName: selectedDonor.name,
-      fromLevelId: fromLevel.id,
-      fromLevelName: fromLevel.name,
-      toLevelId: toLevel.id,
-      toLevelName: toLevel.name,
-      changeType,
-      changeDate: dayjs().format('YYYY-MM-DD'),
-      operator: operator || '系统',
-      reason: reason || (changeType === 'upgrade' ? '累计献血量达标，自动升级' : '年度权益调整'),
-      oldQuota: fromLevel.quota,
-      newQuota: toLevel.quota,
-      carryOverDetail: {
-        ...carryOverResult.carryOverDetail,
-        clearedAmount: carryOverResult.clearedAmount,
-        supplementedAmount: carryOverResult.supplementedAmount
-      }
-    });
+    if (fromLevel.id === toLevel.id) {
+      Taro.showToast({ title: '新等级不能与原等级相同', icon: 'none' });
+      return;
+    }
 
-    updateDonorBenefit(selectedDonor.id, toLevel, carryOverResult.newQuota);
+    processLevelChange(
+      selectedDonor.id,
+      selectedDonor.name,
+      fromLevel,
+      toLevel,
+      changeType,
+      operator || '系统',
+      reason || (changeType === 'upgrade' ? '累计献血量达标，自动升级' : '年度权益调整')
+    );
 
     Taro.showToast({ title: '变更成功', icon: 'success' });
     console.log('[LevelChange] 等级变更完成', {
@@ -250,15 +246,15 @@ const LevelChangePage: React.FC = () => {
               <Text className={styles.carryOverTitle}>结转计算结果</Text>
               <View className={styles.carryOverRow}>
                 <Text className={styles.carryOverLabel}>结转后体检次数</Text>
-                <Text className={styles.carryOverValue}>{carryOverResult.newQuota.physicalExam}次</Text>
+                <Text className={styles.carryOverValue}>{carryOverResult.remainingQuota.physicalExam}次</Text>
               </View>
               <View className={styles.carryOverRow}>
                 <Text className={styles.carryOverLabel}>结转后优先用血</Text>
-                <Text className={styles.carryOverValue}>{carryOverResult.newQuota.priorityBlood}次</Text>
+                <Text className={styles.carryOverValue}>{carryOverResult.remainingQuota.priorityBlood}次</Text>
               </View>
               <View className={styles.carryOverRow}>
                 <Text className={styles.carryOverLabel}>结转后医疗补贴</Text>
-                <Text className={styles.carryOverValue}>{formatMoney(carryOverResult.newQuota.medicalSubsidy)}</Text>
+                <Text className={styles.carryOverValue}>{formatMoney(carryOverResult.remainingQuota.medicalSubsidy)}</Text>
               </View>
               {carryOverResult.clearedAmount > 0 && (
                 <View className={styles.carryOverRow}>

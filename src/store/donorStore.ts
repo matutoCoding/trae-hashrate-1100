@@ -57,69 +57,26 @@ export const useDonorStore = create<DonorStore>((set, get) => ({
             const benefitStore = useBenefitStore.getState();
             const fromLevel = honorLevels.find(l => l.id === oldLevelId);
             const toLevel = newLevel;
-            const existingBenefit = benefitStore.getBenefitByDonorId(donorId);
 
             if (fromLevel && toLevel) {
-              const carryOverResult = benefitStore.calculateCarryOver(
+              benefitStore.processLevelChange(
+                d.id,
+                d.name,
                 fromLevel,
                 toLevel,
-                existingBenefit?.remainingQuota || fromLevel.quota,
-                'upgrade'
+                'upgrade',
+                record.operator || '系统',
+                `累计献血量达到 ${newTotalVolume}ml，自动升级到 ${newLevel.name}`
               );
-
-              benefitStore.addLevelChangeRecord({
-                donorId: d.id,
-                donorName: d.name,
-                fromLevelId: oldLevelId,
-                fromLevelName: oldLevelName,
-                toLevelId: newLevel.id,
-                toLevelName: newLevel.name,
-                changeType: 'upgrade',
-                changeDate: dayjs().format('YYYY-MM-DD'),
-                operator: record.operator || '系统',
-                reason: `累计献血量达到 ${newTotalVolume}ml，自动升级到 ${newLevel.name}`,
-                oldQuota: fromLevel.quota,
-                newQuota: toLevel.quota,
-                carryOverDetail: {
-                  ...carryOverResult.carryOverDetail,
-                  clearedAmount: carryOverResult.clearedAmount,
-                  supplementedAmount: carryOverResult.supplementedAmount
-                }
-              });
-
-              if (existingBenefit) {
-                benefitStore.updateDonorBenefit(donorId, toLevel, carryOverResult.newQuota);
-              } else {
-                benefitStore.donorBenefits.push({
-                  donorId: d.id,
-                  donorName: d.name,
-                  levelId: toLevel.id,
-                  levelName: toLevel.name,
-                  totalVolume: newTotalVolume,
-                  currentQuota: carryOverResult.newQuota,
-                  usedQuota: { physicalExam: 0, priorityBlood: 0, medicalSubsidy: 0, otherBenefits: 0 },
-                  remainingQuota: carryOverResult.newQuota,
-                  lastRenewalDate: dayjs().format('YYYY-MM-DD'),
-                  effectiveDate: dayjs().format('YYYY-MM-DD'),
-                  expiryDate: dayjs().add(1, 'year').format('YYYY-MM-DD')
-                });
-              }
-
-              console.log('[DonorStore] 献血登记触发自动升级', {
-                donorName: d.name,
-                from: oldLevelName,
-                to: newLevel.name,
-                supplementedAmount: carryOverResult.supplementedAmount
-              });
             }
-          }
-
-          const benefitStore = useBenefitStore.getState();
-          const benefit = benefitStore.getBenefitByDonorId(donorId);
-          if (benefit) {
-            benefitStore.donorBenefits = benefitStore.donorBenefits.map(b =>
-              b.donorId === donorId ? { ...b, totalVolume: newTotalVolume } : b
-            );
+          } else {
+            const benefitStore = useBenefitStore.getState();
+            const benefit = benefitStore.getBenefitByDonorId(donorId);
+            if (benefit) {
+              benefitStore.donorBenefits = benefitStore.donorBenefits.map(b =>
+                b.donorId === donorId ? { ...b, totalVolume: newTotalVolume } : b
+              );
+            }
           }
 
           return {

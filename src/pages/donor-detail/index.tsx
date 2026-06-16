@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, Button, ScrollView } from '@tarojs/components';
 import Taro, { useRouter } from '@tarojs/taro';
 import classnames from 'classnames';
@@ -10,15 +10,12 @@ import { formatDate, formatVolume, maskPhone, maskIdCard } from '@/utils/formatt
 
 const DonorDetailPage: React.FC = () => {
   const router = useRouter();
-  const { getDonorById } = useDonorStore();
-  const [donor, setDonor] = useState<ReturnType<typeof getDonorById>>();
-
-  useEffect(() => {
+  const donors = useDonorStore(state => state.donors);
+  
+  const donor = useMemo(() => {
     const id = router.params.id;
-    if (id) {
-      setDonor(getDonorById(id));
-    }
-  }, [router.params.id, getDonorById]);
+    return id ? donors.find(d => d.id === id) : undefined;
+  }, [router.params.id, donors]);
 
   const handleRegisterDonation = () => {
     if (donor) {
