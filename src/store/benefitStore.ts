@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { HonorLevel, LevelChangeRecord, DonorBenefit, BenefitQuota, ChangeType } from '@/types/benefit';
 import { honorLevels as mockLevels, levelChangeRecords as mockRecords, donorBenefits as mockBenefits } from '@/data/benefits';
+import { useDonorStore } from '@/store/donorStore';
 
 interface BenefitStore {
   honorLevels: HonorLevel[];
@@ -26,6 +27,8 @@ interface BenefitStore {
   };
   addLevelChangeRecord: (record: Omit<LevelChangeRecord, 'id'>) => void;
   updateDonorBenefit: (donorId: string, level: HonorLevel, newQuota: BenefitQuota) => void;
+  getAllDonorBenefits: () => (DonorBenefit & { totalDonations: number })[];
+  donorBenefits: DonorBenefit[];
 }
 
 export const useBenefitStore = create<BenefitStore>((set, get) => ({
@@ -105,6 +108,7 @@ export const useBenefitStore = create<BenefitStore>((set, get) => ({
     set(state => {
       const existing = state.donorBenefits.find(b => b.donorId === donorId);
       if (existing) {
+        useDonorStore.getState().updateDonorLevel(donorId, level.id, level.name);
         return {
           donorBenefits: state.donorBenefits.map(b =>
             b.donorId === donorId
@@ -121,6 +125,19 @@ export const useBenefitStore = create<BenefitStore>((set, get) => ({
         };
       }
       return state;
+    });
+  },
+
+  getAllDonorBenefits: () => {
+    const { donorBenefits } = get();
+    const donorStore = useDonorStore.getState();
+    return donorBenefits.map(benefit => {
+      const donor = donorStore.getDonorById(benefit.donorId);
+      return {
+        ...benefit,
+        totalVolume: donor?.totalVolume || benefit.totalVolume,
+        totalDonations: donor?.totalDonations || 0
+      };
     });
   }
 }));

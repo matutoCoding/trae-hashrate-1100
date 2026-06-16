@@ -34,6 +34,8 @@ export interface BloodProduct {
 
 export interface BatchSplitForm {
   batchId: string;
+  operator: string;
+  outboundRemark: string;
   items: {
     bagNumber: string;
     volume: number;

@@ -1,26 +1,29 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, Button } from '@tarojs/components';
+import React, { useState, useMemo } from 'react';
+import { View, Text, ScrollView, Button, Picker } from '@tarojs/components';
 import Taro from '@tarojs/taro';
 import classnames from 'classnames';
 import styles from './index.module.scss';
 import BenefitCard from '@/components/BenefitCard';
 import { useBenefitStore } from '@/store/benefitStore';
 import { useDonorStore } from '@/store/donorStore';
-import { formatDate, formatMoney } from '@/utils/formatter';
+import { formatDate, formatMoney, formatVolume } from '@/utils/formatter';
 
 const BenefitsPage: React.FC = () => {
-  const { honorLevels, levelChangeRecords, donorBenefits } = useBenefitStore();
+  const { honorLevels, levelChangeRecords, getAllDonorBenefits } = useBenefitStore();
   const { donors } = useDonorStore();
   const [activeTab, setActiveTab] = useState<'levels' | 'records' | 'my'>('levels');
+  const [selectedDonorIndex, setSelectedDonorIndex] = useState(0);
 
   const handleLevelChange = () => {
     Taro.navigateTo({ url: '/pages/level-change/index' });
   };
 
-  const donorWithBenefit = donors.slice(0, 1).map(d => {
-    const benefit = donorBenefits.find(b => b.donorId === d.id);
-    return { donor: d, benefit };
-  }).filter(x => x.benefit);
+  const allDonorBenefits = useMemo(() => getAllDonorBenefits(), [getAllDonorBenefits]);
+  const selectedBenefit = useMemo(() => allDonorBenefits[selectedDonorIndex], [allDonorBenefits, selectedDonorIndex]);
+  const donorPickerOptions = useMemo(() => 
+    allDonorBenefits.map(b => `${b.donorName} - ${b.levelName}`), 
+    [allDonorBenefits]
+  );
 
   return (
     <ScrollView scrollY className={styles.page}>
@@ -148,22 +151,42 @@ const BenefitsPage: React.FC = () => {
       {activeTab === 'my' && (
         <>
           <Text className={styles.sectionTitle}>献血者权益额度</Text>
-          {donorWithBenefit.length > 0 ? (
-            donorWithBenefit.map(({ donor, benefit }) => (
-              benefit && (
-                <View key={donor.id}>
+          {allDonorBenefits.length > 0 ? (
+            <>
+              <View className={styles.donorSelectorCard}>
+                <View className={styles.donorSelectorLabel}>
+                  <Text className={styles.formLabel}>选择献血者</Text>
+                  <Text className={styles.donorCount}>共 {allDonorBenefits.length} 人</Text>
+                </View>
+                <Picker
+                  mode="selector"
+                  range={donorPickerOptions}
+                  value={selectedDonorIndex}
+                  onChange={(e) => setSelectedDonorIndex(parseInt(e.detail.value))}
+                >
+                  <View className={styles.donorSelectorInput}>
+                    <Text className={styles.donorSelectorText}>
+                      {selectedBenefit?.donorName || '请选择献血者'}
+                    </Text>
+                    <Text className={styles.donorSelectorArrow}>▼</Text>
+                  </View>
+                </Picker>
+              </View>
+
+              {selectedBenefit && (
+                <View key={selectedBenefit.donorId}>
                   <View className={styles.benefitHeader}>
-                    <Text className={styles.benefitTitle}>{donor.name} - {benefit.levelName}</Text>
+                    <Text className={styles.benefitTitle}>{selectedBenefit.donorName} - {selectedBenefit.levelName}</Text>
                     <Text className={styles.benefitSubtitle}>
-                      有效期: {formatDate(benefit.effectiveDate)} ~ {formatDate(benefit.expiryDate)}
+                      有效期: {formatDate(selectedBenefit.effectiveDate)} ~ {formatDate(selectedBenefit.expiryDate)}
                     </Text>
                     <View className={styles.benefitStats}>
                       <View className={styles.benefitStat}>
-                        <Text className={styles.benefitStatValue}>{donor.totalVolume}</Text>
-                        <Text className={styles.benefitStatLabel}>累计献血(ml)</Text>
+                        <Text className={styles.benefitStatValue}>{formatVolume(selectedBenefit.totalVolume)}</Text>
+                        <Text className={styles.benefitStatLabel}>累计献血</Text>
                       </View>
                       <View className={styles.benefitStat}>
-                        <Text className={styles.benefitStatValue}>{donor.totalDonations}</Text>
+                        <Text className={styles.benefitStatValue}>{selectedBenefit.totalDonations}</Text>
                         <Text className={styles.benefitStatLabel}>献血次数</Text>
                       </View>
                     </View>
@@ -173,45 +196,45 @@ const BenefitsPage: React.FC = () => {
                     <View className={styles.quotaCard}>
                       <View className={styles.quotaHeader}>
                         <Text className={styles.quotaName}>年度权益额度</Text>
-                        <Text className={styles.quotaLevel}>{benefit.levelName}</Text>
+                        <Text className={styles.quotaLevel}>{selectedBenefit.levelName}</Text>
                       </View>
                       <View className={styles.quotaRow}>
                         <Text className={styles.quotaLabel}>免费体检</Text>
                         <View className={styles.quotaValues}>
-                          <Text className={styles.quotaUsed}>已用{benefit.usedQuota.physicalExam}</Text>
-                          <Text className={styles.quotaRemaining}>剩余{benefit.remainingQuota.physicalExam}</Text>
-                          <Text className={styles.quotaTotal}>/共{benefit.currentQuota.physicalExam}次</Text>
+                          <Text className={styles.quotaUsed}>已用{selectedBenefit.usedQuota.physicalExam}</Text>
+                          <Text className={styles.quotaRemaining}>剩余{selectedBenefit.remainingQuota.physicalExam}</Text>
+                          <Text className={styles.quotaTotal}>/共{selectedBenefit.currentQuota.physicalExam}次</Text>
                         </View>
                       </View>
                       <View className={styles.quotaRow}>
                         <Text className={styles.quotaLabel}>优先用血</Text>
                         <View className={styles.quotaValues}>
-                          <Text className={styles.quotaUsed}>已用{benefit.usedQuota.priorityBlood}</Text>
-                          <Text className={styles.quotaRemaining}>剩余{benefit.remainingQuota.priorityBlood}</Text>
-                          <Text className={styles.quotaTotal}>/共{benefit.currentQuota.priorityBlood}次</Text>
+                          <Text className={styles.quotaUsed}>已用{selectedBenefit.usedQuota.priorityBlood}</Text>
+                          <Text className={styles.quotaRemaining}>剩余{selectedBenefit.remainingQuota.priorityBlood}</Text>
+                          <Text className={styles.quotaTotal}>/共{selectedBenefit.currentQuota.priorityBlood}次</Text>
                         </View>
                       </View>
                       <View className={styles.quotaRow}>
                         <Text className={styles.quotaLabel}>医疗补贴</Text>
                         <View className={styles.quotaValues}>
-                          <Text className={styles.quotaUsed}>已用{formatMoney(benefit.usedQuota.medicalSubsidy)}</Text>
-                          <Text className={styles.quotaRemaining}>剩余{formatMoney(benefit.remainingQuota.medicalSubsidy)}</Text>
-                          <Text className={styles.quotaTotal}>/共{formatMoney(benefit.currentQuota.medicalSubsidy)}</Text>
+                          <Text className={styles.quotaUsed}>已用{formatMoney(selectedBenefit.usedQuota.medicalSubsidy)}</Text>
+                          <Text className={styles.quotaRemaining}>剩余{formatMoney(selectedBenefit.remainingQuota.medicalSubsidy)}</Text>
+                          <Text className={styles.quotaTotal}>/共{formatMoney(selectedBenefit.currentQuota.medicalSubsidy)}</Text>
                         </View>
                       </View>
                       <View className={styles.quotaRow}>
                         <Text className={styles.quotaLabel}>其他权益</Text>
                         <View className={styles.quotaValues}>
-                          <Text className={styles.quotaUsed}>已用{benefit.usedQuota.otherBenefits}</Text>
-                          <Text className={styles.quotaRemaining}>剩余{benefit.remainingQuota.otherBenefits}</Text>
-                          <Text className={styles.quotaTotal}>/共{benefit.currentQuota.otherBenefits}项</Text>
+                          <Text className={styles.quotaUsed}>已用{selectedBenefit.usedQuota.otherBenefits}</Text>
+                          <Text className={styles.quotaRemaining}>剩余{selectedBenefit.remainingQuota.otherBenefits}</Text>
+                          <Text className={styles.quotaTotal}>/共{selectedBenefit.currentQuota.otherBenefits}项</Text>
                         </View>
                       </View>
                     </View>
                   </View>
                 </View>
-              )
-            ))
+              )}
+            </>
           ) : (
             <View className={styles.emptyState}>
               <Text className={styles.emptyIcon}>🎖️</Text>

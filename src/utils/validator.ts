@@ -34,3 +34,30 @@ export const validatePhone = (phone: string): boolean => {
 export const validateVolume = (volume: number): boolean => {
   return volume === 200 || volume === 300 || volume === 400;
 };
+
+export const validateOutboundVolume = (
+  volume: number,
+  maxVolume: number,
+  minVolume: number = 1
+): { valid: boolean; message: string } => {
+  if (!volume || isNaN(volume)) {
+    return { valid: false, message: '体积不能为空' };
+  }
+  if (volume < 0) {
+    return { valid: false, message: '体积不能为负数' };
+  }
+  if (volume < minVolume) {
+    return { valid: false, message: `体积不能小于 ${minVolume}ml` };
+  }
+  if (volume > maxVolume) {
+    return { valid: false, message: `体积不能超过 ${maxVolume}ml` };
+  }
+  return { valid: true, message: '' };
+};
+
+export const validateBagNumber = (bagNumber: string): { valid: boolean; message: string } => {
+  if (!bagNumber || !bagNumber.trim()) {
+    return { valid: false, message: '袋编号不能为空' };
+  }
+  return { valid: true, message: '' };
+};

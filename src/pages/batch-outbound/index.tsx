@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { View, Text, Picker, Input, Button, ScrollView, Textarea } from '@tarojs/components';
 import Taro, { useRouter } from '@tarojs/taro';
+import classnames from 'classnames';
 import styles from './index.module.scss';
 import StatusTag from '@/components/StatusTag';
 import { useProductStore } from '@/store/productStore';
 import { formatVolume, formatDate } from '@/utils/formatter';
+import { validateOutboundVolume, validateBagNumber } from '@/utils/validator';
 import { ProductStatus } from '@/types/product';
 
 const DEPARTMENTS = ['心内科', '普外科', '急诊科', '血液科', 'ICU', '骨科', '产科', '外科', '其他科室'];
@@ -81,6 +83,35 @@ const BatchOutboundPage: React.FC = () => {
         departmentIndex: deptIdx,
         department: DEPARTMENTS[deptIdx]
       };
+    } else if (field === 'volume') {
+      const rawValue = String(value);
+      const numValue = parseInt(rawValue);
+      
+      if (rawValue === '' || rawValue === '-') {
+        newItems[index] = { ...newItems[index], volume: rawValue };
+      } else if (isNaN(numValue)) {
+        Taro.showToast({ title: '请输入有效数字', icon: 'none' });
+        return;
+      } else if (numValue < 0) {
+        Taro.showToast({ title: '体积不能为负数', icon: 'none' });
+        return;
+      } else if (selectedProduct && numValue > selectedProduct.remainingVolume) {
+        Taro.showToast({ title: `不能超过${selectedProduct.remainingVolume}ml`, icon: 'none' });
+        return;
+      } else {
+        const validation = validateOutboundVolume(numValue, selectedProduct?.remainingVolume || 999999);
+        if (!validation.valid) {
+          Taro.showToast({ title: validation.message, icon: 'none' });
+          return;
+        }
+        newItems[index] = { ...newItems[index], volume: rawValue };
+      }
+    } else if (field === 'bagNumber') {
+      const validation = validateBagNumber(String(value));
+      if (!validation.valid && value) {
+        Taro.showToast({ title: validation.message, icon: 'none' });
+      }
+      newItems[index] = { ...newItems[index], bagNumber: String(value) };
     } else {
       (newItems[index] as any)[field] = value;
     }
@@ -89,12 +120,15 @@ const BatchOutboundPage: React.FC = () => {
 
   const summary = useMemo(() => {
     const totalBags = splitItems.length;
-    const totalVolume = splitItems.reduce((sum, item) => sum + (parseInt(item.volume) || 0), 0);
+    const totalVolume = splitItems.reduce((sum, item) => {
+      const vol = parseInt(item.volume);
+      return sum + (isNaN(vol) || vol < 0 ? 0 : vol);
+    }, 0);
     let remainingBags = 0;
     let remainingVolume = 0;
     if (selectedProduct) {
-      remainingBags = selectedProduct.remainingBags - totalBags;
-      remainingVolume = selectedProduct.remainingVolume - totalVolume;
+      remainingBags = Math.max(0, selectedProduct.remainingBags - totalBags);
+      remainingVolume = Math.max(0, selectedProduct.remainingVolume - totalVolume);
     }
     return { totalBags, totalVolume, remainingBags, remainingVolume };
   }, [splitItems, selectedProduct]);
@@ -113,43 +147,68 @@ const BatchOutboundPage: React.FC = () => {
       return;
     }
 
-    if (splitItems.some(item => !item.bagNumber || !item.volume || !item.department || !item.recipient)) {
-      Taro.showToast({ title: '请完善出库信息', icon: 'none' });
+    for (let i = 0; i < splitItems.length; i++) {
+      const item = splitItems[i];
+      const bagValidation = validateBagNumber(item.bagNumber);
+      if (!bagValidation.valid) {
+        Taro.showToast({ title: `第${i + 1}袋: ${bagValidation.message}`, icon: 'none' });
+        return;
+      }
+      const volNum = parseInt(item.volume);
+      const volValidation = validateOutboundVolume(volNum, selectedProduct.remainingVolume);
+      if (!volValidation.valid) {
+        Taro.showToast({ title: `第${i + 1}袋: ${volValidation.message}`, icon: 'none' });
+        return;
+      }
+      if (!item.department) {
+        Taro.showToast({ title: `第${i + 1}袋: 请选择科室`, icon: 'none' });
+        return;
+      }
+      if (!item.recipient) {
+        Taro.showToast({ title: `第${i + 1}袋: 请填写受血者`, icon: 'none' });
+        return;
+      }
+    }
+
+    if (summary.totalVolume > selectedProduct.remainingVolume) {
+      Taro.showToast({ title: `出库总体积(${summary.totalVolume}ml)超过剩余(${selectedProduct.remainingVolume}ml)`, icon: 'none' });
       return;
     }
 
     if (summary.totalBags > selectedProduct.remainingBags) {
-      Taro.showToast({ title: '出库袋数超过剩余', icon: 'none' });
+      Taro.showToast({ title: `出库袋数(${summary.totalBags})超过剩余(${selectedProduct.remainingBags}袋)`, icon: 'none' });
       return;
     }
 
-    if (summary.totalVolume > selectedProduct.remainingVolume) {
-      Taro.showToast({ title: '出库体积超过剩余', icon: 'none' });
-      return;
+    try {
+      processBatchOutbound({
+        batchId: selectedProduct.id,
+        operator: operator || '系统',
+        outboundRemark: outboundRemark,
+        items: splitItems.map(item => ({
+          bagNumber: item.bagNumber,
+          volume: parseInt(item.volume) || 0,
+          department: item.department,
+          recipient: item.recipient,
+          remark: item.remark
+        }))
+      });
+
+      console.log('[BatchOutbound] 批次出库完成', {
+        batchNumber: selectedProduct.batchNumber,
+        bags: summary.totalBags,
+        volume: summary.totalVolume,
+        operator: operator || '系统'
+      });
+
+      Taro.showToast({ title: '出库成功', icon: 'success' });
+      setTimeout(() => {
+        Taro.redirectTo({ url: `/pages/trace/index?id=${selectedProduct.id}` });
+      }, 1500);
+    } catch (error: any) {
+      console.error('[BatchOutbound] 出库失败', error);
+      Taro.showToast({ title: error.message || '出库失败', icon: 'none' });
     }
-
-    processBatchOutbound({
-      batchId: selectedProduct.id,
-      items: splitItems.map(item => ({
-        bagNumber: item.bagNumber,
-        volume: parseInt(item.volume) || 0,
-        department: item.department,
-        recipient: item.recipient,
-        remark: item.remark
-      }))
-    });
-
-    console.log('[BatchOutbound] 批次出库完成', {
-      batchNumber: selectedProduct.batchNumber,
-      bags: summary.totalBags,
-      volume: summary.totalVolume,
-      operator: operator || '系统'
-    });
-
-    Taro.showToast({ title: '出库成功', icon: 'success' });
-    setTimeout(() => {
-      Taro.navigateBack();
-    }, 1500);
   };
 
   return (

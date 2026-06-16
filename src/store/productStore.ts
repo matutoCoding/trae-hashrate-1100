@@ -45,25 +45,78 @@ export const useProductStore = create<ProductStore>((set, get) => ({
   },
 
   processBatchOutbound: (form: BatchSplitForm) => {
+    const product = get().getProductById(form.batchId);
+    if (!product) {
+      throw new Error('批次不存在');
+    }
+
+    if (form.items.length === 0) {
+      throw new Error('出库项不能为空');
+    }
+
+    if (form.items.length > product.remainingBags) {
+      throw new Error(`出库袋数(${form.items.length})超过剩余袋数(${product.remainingBags})`);
+    }
+
+    const totalOutVolume = form.items.reduce((sum, item) => sum + item.volume, 0);
+    if (totalOutVolume <= 0) {
+      throw new Error('出库总体积必须大于0');
+    }
+    if (totalOutVolume > product.remainingVolume) {
+      throw new Error(`出库总体积(${totalOutVolume}ml)超过剩余体积(${product.remainingVolume}ml)`);
+    }
+
+    for (const item of form.items) {
+      if (!item.bagNumber || !item.bagNumber.trim()) {
+        throw new Error('袋编号不能为空');
+      }
+      if (!item.volume || item.volume <= 0) {
+        throw new Error(`袋(${item.bagNumber})体积必须大于0`);
+      }
+      if (item.volume > product.remainingVolume) {
+        throw new Error(`袋(${item.bagNumber})体积(${item.volume}ml)超过批次剩余体积`);
+      }
+      if (!item.department || !item.department.trim()) {
+        throw new Error(`袋(${item.bagNumber})科室不能为空`);
+      }
+      if (!item.recipient || !item.recipient.trim()) {
+        throw new Error(`袋(${item.bagNumber})受血者不能为空`);
+      }
+    }
+
     set(state => {
       const products = state.products.map(p => {
         if (p.id === form.batchId) {
-          const outboundRecords: OutboundRecord[] = form.items.map((item, idx) => ({
-            id: `out-${Date.now()}-${idx}`,
-            batchId: form.batchId,
-            bagNumber: item.bagNumber,
-            volume: item.volume,
-            outboundDate: new Date().toISOString().split('T')[0],
-            department: item.department,
-            recipient: item.recipient,
-            operator: '当前操作员',
-            remark: item.remark
-          }));
+          const now = new Date().toISOString().split('T')[0];
+          const outboundRecords: OutboundRecord[] = form.items.map((item, idx) => {
+            const finalRemark = [
+              form.outboundRemark,
+              item.remark
+            ].filter(Boolean).join(' | ');
 
-          const totalOutVolume = form.items.reduce((sum, item) => sum + item.volume, 0);
-          const totalOutBags = form.items.length;
+            return {
+              id: `out-${Date.now()}-${idx}`,
+              batchId: form.batchId,
+              bagNumber: item.bagNumber,
+              volume: item.volume,
+              outboundDate: now,
+              department: item.department,
+              recipient: item.recipient,
+              operator: form.operator || '系统',
+              remark: finalRemark
+            };
+          });
+
           const newRemainingVolume = p.remainingVolume - totalOutVolume;
-          const newRemainingBags = p.remainingBags - totalOutBags;
+          const newRemainingBags = p.remainingBags - form.items.length;
+
+          if (newRemainingVolume < 0 || newRemainingBags < 0) {
+            console.error('[ProductStore] 库存计算异常，拒绝出库', {
+              newRemainingVolume,
+              newRemainingBags
+            });
+            return p;
+          }
 
           let newStatus: ProductStatus = p.status;
           if (newRemainingBags <= 0) {
@@ -74,9 +127,11 @@ export const useProductStore = create<ProductStore>((set, get) => ({
 
           console.log('[ProductStore] 批次出库处理完成', {
             batchNumber: p.batchNumber,
-            outboundBags: totalOutBags,
+            outboundBags: form.items.length,
             outboundVolume: totalOutVolume,
             remainingBags: newRemainingBags,
+            remainingVolume: newRemainingVolume,
+            operator: form.operator,
             newStatus
           });
 
